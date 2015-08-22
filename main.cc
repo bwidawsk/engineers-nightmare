@@ -38,6 +38,7 @@
 #include "src/component/renderable_component.h"
 #include "src/component/switch_component.h"
 #include "src/component/switchable_component.h"
+#include "src/component/toggle_block_component.h"
 
 #include "src/projectile/projectile.h"
 
@@ -151,6 +152,7 @@ relative_position_component_manager pos_man;
 renderable_component_manager render_man;
 switch_component_manager switch_man;
 switchable_component_manager switchable_man;
+toggle_block_component_manager toggle_man;
 
 projectile_linear_manager proj_man;
 
@@ -263,6 +265,72 @@ struct entity
 
             light_man.assign_entity(ce);
             light_man.intensity(ce) = 0.15f;
+
+            toggle_man.assign_entity(ce);
+
+            block * bl;
+            unsigned char toggles = 0u;
+            if (face == 0 || face == 1) {
+                // wall
+                auto xoff = face == 0 ? 1 : -1;
+                bl = ship->get_block(x + xoff, y + 1, z);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x1;
+                }
+                bl = ship->get_block(x + xoff, y - 1, z);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x2;
+                }
+                bl = ship->get_block(x + xoff, y, z + 1);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x4;
+                }
+                bl = ship->get_block(x + xoff, y, z - 1);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x8;
+                }
+            }
+            else if (face == 2 || face == 3) {
+                // wall
+                auto yoff = face == 2 ? 1 : -1;
+                bl = ship->get_block(x + 1, y + yoff, z);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x1;
+                }
+                bl = ship->get_block(x - 1, y + yoff, z);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x2;
+                }
+                bl = ship->get_block(x, y + yoff, z + 1);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x4;
+                }
+                bl = ship->get_block(x, y + yoff, z - 1);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x8;
+                }
+            }
+            else {
+                // ceiling/floor
+                auto zoff = face == 4 ? 1 : -1;
+                bl = ship->get_block(x + 1, y, z + zoff);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x1;
+                }
+                bl = ship->get_block(x - 1, y, z + zoff);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x2;
+                }
+                bl = ship->get_block(x, y + 1, z + zoff);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x4;
+                }
+                bl = ship->get_block(x, y - 1, z + zoff);
+                if (!bl || bl->type == block_empty) {
+                    toggles |= 0x8;
+                }
+            }
+            toggle_man.toggles(ce) = toggles;
         }
         // light
         else if (type == &entity_types[2]) {
@@ -298,6 +366,93 @@ struct entity
             // gas producer toggles directly
             if (gas_man.exists(ce)) {
                 switchable_man.enabled(ce) ^= true;
+            }
+        }
+
+        if (toggle_man.exists(ce)) {
+            auto toggles = toggle_man.toggles(ce);
+
+            if (toggles == 0) {
+                return;
+            }
+            block *bl[4] = { nullptr };
+            chunk *ch[4] = { nullptr };
+            unsigned offset;
+
+            switch (face) {
+            case 0: case 1:
+                offset = face == 0 ? 1 : -1;
+                if (toggles & 0x1) {
+                    bl[0] = ship->ensure_block(x + offset, y + 1, z);
+                    ch[0] = ship->get_chunk_containing(x + offset, y + 1, z);
+                }
+                if (toggles & 0x2) {
+                    bl[1] = ship->ensure_block(x + offset, y - 1, z);
+                    ch[1] = ship->get_chunk_containing(x + offset, y - 1, z);
+                }
+                if (toggles & 0x4) {
+                    bl[2] = ship->ensure_block(x + offset, y, z + 1);
+                    ch[2] = ship->get_chunk_containing(x + offset, y, z + 1);
+                }
+                if (toggles & 0x8) {
+                    bl[3] = ship->ensure_block(x + offset, y, z - 1);
+                    ch[3] = ship->get_chunk_containing(x + offset, y, z - 1);
+                }
+                break;
+            case 2: case 3:
+                offset = face == 2 ? 1 : -1;
+                if (toggles & 0x1) {
+                    bl[0] = ship->ensure_block(x + 1, y + offset, z);
+                    ch[0] = ship->get_chunk_containing(x + 1, y + offset, z);
+                }
+                if (toggles & 0x2) {
+                    bl[1] = ship->ensure_block(x - 1, y + offset, z);
+                    ch[1] = ship->get_chunk_containing(x - 1, y + offset, z);
+                }
+                if (toggles & 0x4) {
+                    bl[2] = ship->ensure_block(x, y + offset, z + 1);
+                    ch[2] = ship->get_chunk_containing(x, y + offset, z + 1);
+                }
+                if (toggles & 0x8) {
+                    bl[3] = ship->ensure_block(x, y + offset, z - 1);
+                    ch[3] = ship->get_chunk_containing(x, y + offset, z - 1);
+                }
+                break;
+            case 4: case 5:
+                offset = face == 4 ? 1 : -1;
+                if (toggles & 0x1) {
+                    bl[0] = ship->ensure_block(x + 1, y, z + offset);
+                    ch[0] = ship->get_chunk_containing(x + 1, y, z + offset);
+                }
+                if (toggles & 0x2) {
+                    bl[1] = ship->ensure_block(x - 1, y, z + offset);
+                    ch[1] = ship->get_chunk_containing(x - 1, y, z + offset);
+                }
+                if (toggles & 0x4) {
+                    bl[2] = ship->ensure_block(x, y + 1, z + offset);
+                    ch[2] = ship->get_chunk_containing(x, y + 1, z + offset);
+                }
+                if (toggles & 0x8) {
+                    bl[3] = ship->ensure_block(x, y - 1, z + offset);
+                    ch[3] = ship->get_chunk_containing(x, y - 1, z + offset);
+                }
+                break;
+            }
+
+            for (auto i = 0u; i < 4; ++i) {
+                if (!bl[i])
+                    continue;
+
+                if (bl[i]->type == block_empty) {
+                    bl[i]->type = block_support;
+                    /* dirty the chunk */
+                    ch[i]->render_chunk.valid = false;
+                }
+                else if (bl[i]->type == block_support) {
+                    bl[i]->type = block_empty;
+                    /* dirty the chunk */
+                    ch[i]->render_chunk.valid = false;
+                }
             }
         }
 
@@ -545,6 +700,7 @@ init()
     render_man.create_component_instance_data(20);
     switch_man.create_component_instance_data(20);
     switchable_man.create_component_instance_data(20);
+    toggle_man.create_component_instance_data(20);
 
     proj_man.create_projectile_data(1000);
 
@@ -745,6 +901,10 @@ remove_ents_from_surface(int x, int y, int z, int face)
 
             if (switchable_man.exists(e->ce)) {
                 switchable_man.destroy_entity_instance(e->ce);
+            }
+
+            if (toggle_man.exists(e->ce)) {
+                toggle_man.destroy_entity_instance(e->ce);
             }
 
             delete e;

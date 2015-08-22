@@ -117,6 +117,9 @@
     <ClCompile Include="src\component\switchable_component.cc">
       <Filter>Source Files\component</Filter>
     </ClCompile>
+    <ClCompile Include="src\component\toggle_block_component.cc">
+      <Filter>Source Files\component</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\blob.h">
@@ -213,6 +216,9 @@
       <Filter>Header Files\component</Filter>
     </ClInclude>
     <ClInclude Include="src\component\switchable_component.h">
+      <Filter>Header Files\component</Filter>
+    </ClInclude>
+    <ClInclude Include="src\component\toggle_block_component.h">
       <Filter>Header Files\component</Filter>
     </ClInclude>
   </ItemGroup>
