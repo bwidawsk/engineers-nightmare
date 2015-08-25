@@ -29,6 +29,7 @@
 #include "src/tools.h"
 #include "src/shader_params.h"
 #include "src/light_field.h"
+#include "src/entity.h"
 
 #include "src/component/component_manager.h"
 #include "src/component/gas_production_component.h"
@@ -64,6 +65,8 @@ bool draw_hud = true;
 auto hfov = DEG2RAD(90.f);
 
 en_settings game_settings;
+
+entity_type entity_types[NUM_ENTITY_TYPES];
 
 struct {
     SDL_Window *ptr;
@@ -282,131 +285,108 @@ mat_block_face(int x, int y, int z, int face)
     }
 }
 
-
-struct entity_type
-{
-    sw_mesh *sw;
-    hw_mesh *hw;
-    char const *name;
-    btTriangleMesh *phys_mesh;
-    btCollisionShape *phys_shape;
-};
-
-
-entity_type entity_types[NUM_ENTITY_TYPES];
-
 /* fwd for temp spawn logic just below */
 void
 mark_lightfield_update(int x, int y, int z);
 
+entity::entity(int x, int y, int z, entity_type *type, int face)
+    : x(x), y(y), z(z), type(type), phys_body(nullptr), face(face) {
+    auto mat = mat_block_face(x, y, z, face);
 
-struct entity
-{
-    /* TODO: replace this completely, it's silly. */
-    int x, y, z;
-    entity_type *type;
-    btRigidBody *phys_body;
-    int face;
-    c_entity ce;
+    build_static_physics_rb_mat(&mat, type->phys_shape, &phys_body);
 
-    entity(int x, int y, int z, entity_type *type, int face)
-        : x(x), y(y), z(z), type(type), phys_body(nullptr), face(face) {
-        auto mat = mat_block_face(x, y, z, face);
+    /* so that we can get back to the entity from a phys raycast */
+    phys_body->setUserPointer(this);
 
-        build_static_physics_rb_mat(&mat, type->phys_shape, &phys_body);
+    pos_man.assign_entity(ce);
+    pos_man.position(ce) = glm::vec3(x, y, z);
+    pos_man.mat(ce) = mat;
 
-        /* so that we can get back to the entity from a phys raycast */
-        phys_body->setUserPointer(this);
+    render_man.assign_entity(ce);
+    render_man.mesh(ce) = *type->hw;
 
-        pos_man.assign_entity(ce);
-        pos_man.position(ce) = glm::vec3(x, y, z);
-        pos_man.mat(ce) = mat;
+    // frobnicator
+    if (type == &entity_types[0]) {
+        power_man.assign_entity(ce);
+        //default to powered state for now
+        power_man.powered(ce) = true;
 
-        render_man.assign_entity(ce);
-        render_man.mesh(ce) = *type->hw;
+        switchable_man.assign_entity(ce);
+        switchable_man.enabled(ce) = false;
 
-        // frobnicator
-        if (type == &entity_types[0]) {
-            power_man.assign_entity(ce);
-            //default to powered state for now
-            power_man.powered(ce) = true;
+        gas_man.assign_entity(ce);
+        gas_man.flow_rate(ce) = 0.1f;
+        gas_man.max_pressure(ce) = 1.0f;
+    }
+    // display panel
+    else if (type == &entity_types[1]) {
+        power_man.assign_entity(ce);
+        //default to powered state for now
+        power_man.powered(ce) = true;
 
-            switchable_man.assign_entity(ce);
-            switchable_man.enabled(ce) = false;
+        light_man.assign_entity(ce);
+        light_man.intensity(ce) = 0.15f;
+    }
+    // light
+    else if (type == &entity_types[2]) {
+        power_man.assign_entity(ce);
+        //default to powered state for now
+        power_man.powered(ce) = true;
 
-            gas_man.assign_entity(ce);
-            gas_man.flow_rate(ce) = 0.1f;
-            gas_man.max_pressure(ce) = 1.0f;
-        }
-        // display panel
-        else if (type == &entity_types[1]) {
-            power_man.assign_entity(ce);
-            //default to powered state for now
-            power_man.powered(ce) = true;
+        switchable_man.assign_entity(ce);
+        switchable_man.enabled(ce) = false;
 
-            light_man.assign_entity(ce);
-            light_man.intensity(ce) = 0.15f;
-        }
-        // light
-        else if (type == &entity_types[2]) {
-            power_man.assign_entity(ce);
-            //default to powered state for now
-            power_man.powered(ce) = true;
+        light_man.assign_entity(ce);
+        light_man.intensity(ce) = 1.f;
+    }
+    // switch
+    else if (type == &entity_types[3]) {
+        switch_man.assign_entity(ce);
+    }
+}
 
-            switchable_man.assign_entity(ce);
-            switchable_man.enabled(ce) = false;
+entity::~entity() {
+    teardown_static_physics_setup(nullptr, nullptr, &phys_body);
+}
 
-            light_man.assign_entity(ce);
-            light_man.intensity(ce) = 1.f;
-        }
-        // switch
-        else if (type == &entity_types[3]) {
-            switch_man.assign_entity(ce);
+void
+entity::use() {
+    /* used by the player */
+    printf("player using the %s at %d %d %d\n",
+            type->name, x, y, z);
+
+    assert(pos_man.exists(ce) || !"All [usable] entities probably need position");
+
+    // hacks abound until we get wiring in
+    if (switchable_man.exists(ce)) {
+        // gas producer toggles directly
+        if (gas_man.exists(ce)) {
+            switchable_man.enabled(ce) ^= true;
         }
     }
 
-    ~entity() {
-        teardown_static_physics_setup(nullptr, nullptr, &phys_body);
-    }
+    if (switch_man.exists(ce)) {
+        // switch toggles directly
+        // finds any switchable in the 6 adjacent blocks and toggles
+        auto pos = pos_man.position(ce);
 
-    void use() {
-        /* used by the player */
-        printf("player using the %s at %d %d %d\n",
-               type->name, x, y, z);
-
-        assert(pos_man.exists(ce) || !"All [usable] entities probably need position");
-
-        // hacks abound until we get wiring in
-        if (switchable_man.exists(ce)) {
-            // gas producer toggles directly
-            if (gas_man.exists(ce)) {
-                switchable_man.enabled(ce) ^= true;
-            }
-        }
-
-        if (switch_man.exists(ce)) {
-            // switch toggles directly
-            // finds any switchable in the 6 adjacent blocks and toggles
-            auto pos = pos_man.position(ce);
-
-            for (auto i = 0u; i < pos_man.buffer.num; ++i) {
-                auto pos2 = pos_man.instance_pool.position[i];
-                auto entity = pos_man.instance_pool.entity[i];
-                if (pos == glm::vec3(pos2.x + 1, pos2.y, pos2.z) ||
-                    pos == glm::vec3(pos2.x - 1, pos2.y, pos2.z) ||
-                    pos == glm::vec3(pos2.x, pos2.y + 1, pos2.z) ||
-                    pos == glm::vec3(pos2.x, pos2.y - 1, pos2.z) ||
-                    pos == glm::vec3(pos2.x, pos2.y, pos2.z + 1) ||
-                    pos == glm::vec3(pos2.x, pos2.y, pos2.z - 1)) {
-                    if (light_man.exists(entity) && switchable_man.exists(entity)) {
-                        switchable_man.enabled(entity) ^= true;
-                        mark_lightfield_update(x, y, z);
-                    }
+        for (auto i = 0u; i < pos_man.buffer.num; ++i) {
+            auto pos2 = pos_man.instance_pool.position[i];
+            auto entity = pos_man.instance_pool.entity[i];
+            if (pos == glm::vec3(pos2.x + 1, pos2.y, pos2.z) ||
+                pos == glm::vec3(pos2.x - 1, pos2.y, pos2.z) ||
+                pos == glm::vec3(pos2.x, pos2.y + 1, pos2.z) ||
+                pos == glm::vec3(pos2.x, pos2.y - 1, pos2.z) ||
+                pos == glm::vec3(pos2.x, pos2.y, pos2.z + 1) ||
+                pos == glm::vec3(pos2.x, pos2.y, pos2.z - 1)) {
+                if (light_man.exists(entity) && switchable_man.exists(entity)) {
+                    switchable_man.enabled(entity) ^= true;
+                    mark_lightfield_update(x, y, z);
                 }
             }
         }
     }
-};
+}
 
 
 void

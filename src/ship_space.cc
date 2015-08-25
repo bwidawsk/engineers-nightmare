@@ -59,7 +59,7 @@ ship_space::get_block(int block_x, int block_y, int block_z)
     chunk *c = this->get_chunk(chunk_x, chunk_y, chunk_z);
 
     if( ! c ){
-        return 0;
+        return nullptr;
     }
 
     return c->blocks.get(wb_x, wb_y, wb_z);

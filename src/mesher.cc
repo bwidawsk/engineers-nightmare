@@ -209,6 +209,10 @@ chunk::prepare_render(int x, int y, int z)
 
 chunk::~chunk() {
     if (render_chunk.mesh) {
+        for (auto entity : entities) {
+            delete entity;
+        }
+
         free_mesh(render_chunk.mesh);
         delete render_chunk.mesh;
     }

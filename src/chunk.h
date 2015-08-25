@@ -1,14 +1,14 @@
 #pragma once
 
-#include "block.h"
-#include "fixed_cube.h"
-
 #include <vector>
+
+#include "block.h"
+#include "entity.h"
+#include "fixed_cube.h"
 
 #define CHUNK_SIZE 8
 
 struct hw_mesh;
-struct entity;
 
 class btTriangleMesh;
 class btCollisionShape;

@@ -221,5 +221,8 @@
     <ClInclude Include="src\component\switchable_component.h">
       <Filter>Header Files\component</Filter>
     </ClInclude>
+    <ClInclude Include="src\entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

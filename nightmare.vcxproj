@@ -161,6 +161,7 @@
     <ClInclude Include="src\component\switchable_component.h" />
     <ClInclude Include="src\component\switch_component.h" />
     <ClInclude Include="src\config.h" />
+    <ClInclude Include="src\entity.h" />
     <ClInclude Include="src\fixed_cube.h" />
     <ClInclude Include="src\fixed_grid.h" />
     <ClInclude Include="src\input.h" />
