@@ -29,4 +29,6 @@ struct fire_projectile_tool : tool
 };
 
 
-tool *tool::create_fire_projectile_tool(player *pl) { return new fire_projectile_tool(pl); }
+tool *tool::create_fire_projectile_tool(player *pl) {
+    return new fire_projectile_tool(pl);
+}

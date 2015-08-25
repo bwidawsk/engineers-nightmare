@@ -31,6 +31,9 @@ struct topo_info {
 };
 
 struct chunk {
+    chunk() {
+        printf("DFDSF");
+    }
     /* with a CHUNK_SIZE of 8
      * we have 8^3 blocks
      * this means a chunk represents
@@ -46,6 +49,8 @@ struct chunk {
     std::vector<entity *> entities;
 
     void prepare_render(int x, int y, int z);
+
+    virtual ~chunk();
 };
 
 /* must be called once before the mesher can be used */

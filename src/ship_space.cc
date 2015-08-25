@@ -720,3 +720,13 @@ ship_space::validate()
 
     return pass;
 }
+
+ship_space::~ship_space() {
+    for (auto chunk : chunks) {
+        delete chunk.second;
+    }
+
+    for (auto zone : zones) {
+        delete zone.second;
+    }
+}

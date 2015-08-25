@@ -107,3 +107,7 @@ sprite_renderer::draw()
     atlas->bind(0);
     glDrawArrays(GL_TRIANGLES, 0, bo_vertex_count);
 }
+
+sprite_renderer::~sprite_renderer() {
+    delete atlas;
+}

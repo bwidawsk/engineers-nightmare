@@ -115,6 +115,8 @@ struct ship_space {
     int num_false_splits;       /* number of useless rebuilds taken */
 
     bool validate();
+
+    virtual ~ship_space();
 };
 
 /* helper */

@@ -55,6 +55,8 @@
 #define MOUSE_Y_LIMIT   1.54f
 #define MAX_AXIS_PER_EVENT 128
 
+#define NUM_ENTITY_TYPES 4
+
 bool exit_requested = false;
 
 bool draw_hud = true;
@@ -291,7 +293,7 @@ struct entity_type
 };
 
 
-entity_type entity_types[4];
+entity_type entity_types[NUM_ENTITY_TYPES];
 
 /* fwd for temp spawn logic just below */
 void
@@ -1765,7 +1767,58 @@ run()
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (exit_requested) return;
+        if (exit_requested) {
+            delete projectile_sw->verts;
+            delete projectile_sw->indices;
+            delete projectile_sw;
+
+            delete projectile_hw;
+            
+            delete scaffold_sw->verts;
+            delete scaffold_sw->indices;
+            delete scaffold_sw;
+
+            delete scaffold_hw;
+
+            for (auto i = 0u; i < 6; i++)
+                delete surfs_hw[i];
+
+            for (auto i = 0u; i < 6; i++) {
+                delete surfs_sw[i]->verts;
+                delete surfs_sw[i]->indices;
+                delete surfs_sw[i];
+            }
+
+            for (auto i = 0u; i < NUM_ENTITY_TYPES; i++)
+                delete entity_types[i].hw;
+
+            for (auto i = 0u; i < NUM_ENTITY_TYPES; i++) {
+                delete entity_types[i].sw->verts;
+                delete entity_types[i].sw->indices;
+                delete entity_types[i].sw;
+            }
+
+            unsigned num_tools = sizeof(tools) / sizeof(tools[0]);
+            for (auto i = 0u; i < num_tools; ++i) {
+                delete tools[i];
+            }
+
+            delete[] frames;
+            delete[] world_textures;
+
+            delete ship;
+            delete light;
+            delete state;
+            delete skybox;
+            delete per_object;
+            // this excepts
+            //delete phy;
+
+            delete text;
+            delete ui_sprites;
+
+            return;
+        }
     }
 }
 

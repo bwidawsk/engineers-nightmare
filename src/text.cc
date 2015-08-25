@@ -164,3 +164,7 @@ text_renderer::draw()
     atlas->bind(0);
     glDrawArrays(GL_TRIANGLES, 0, bo_vertex_count);
 }
+
+text_renderer::~text_renderer() {
+    delete atlas;
+}

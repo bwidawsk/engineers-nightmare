@@ -45,6 +45,7 @@ struct texture_atlas
     void add_bitmap(unsigned char *src, int pitch, unsigned width, unsigned height, int *out_x, int *out_y);
     void upload();
     void bind(int texunit);
+    virtual ~texture_atlas();
 };
 
 
@@ -68,6 +69,8 @@ struct text_renderer
     void upload();
     void reset();
     void draw();
+
+    virtual ~text_renderer();
 };
 
 struct sprite_renderer
@@ -88,4 +91,6 @@ struct sprite_renderer
     void upload();
     void reset();
     void draw();
+
+    virtual ~sprite_renderer();
 };

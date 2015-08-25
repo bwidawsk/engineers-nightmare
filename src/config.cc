@@ -240,6 +240,8 @@ load_binding_settings(en_config_type config_type) {
 
             if (inputs)
                 free(inputs);
+            if (inputs_names)
+                free(inputs_names);
         }
     }
 

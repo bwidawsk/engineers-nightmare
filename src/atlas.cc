@@ -91,5 +91,8 @@ texture_atlas::bind(int texunit)
     glBindTexture(GL_TEXTURE_2D, tex);
 }
 
+texture_atlas::~texture_atlas() {
+    delete buf;
+}
 
 

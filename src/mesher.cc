@@ -207,3 +207,9 @@ chunk::prepare_render(int x, int y, int z)
                             &this->render_chunk.phys_body);
 }
 
+chunk::~chunk() {
+    if (render_chunk.mesh) {
+        free_mesh(render_chunk.mesh);
+        delete render_chunk.mesh;
+    }
+}
