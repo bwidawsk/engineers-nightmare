@@ -1430,6 +1430,9 @@ update()
             );
 
     pl.eye = pl.pos + glm::vec3(0, 0, EYE_OFFSET_Z);
+    if (phy->controller->isCrouching()) {
+        pl.eye.z -= 0.2;
+    }
 
     auto vfov = hfov * (float)wnd.height / wnd.width;
 
