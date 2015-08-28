@@ -64,7 +64,7 @@ void projectile_manager::destroy_instance(unsigned index) {
 void
 projectile_manager::spawn(glm::vec3 pos, glm::vec3 dir, hw_mesh m) {
     if (buffer.num >= buffer.allocated) {
-        assert(buffer.allocated == 0);
+        //assert(buffer.allocated == 0);
         printf("Resizing projectiles buffer. Please adjust initial.\n");
         create_projectile_data(std::max(1u, buffer.allocated) * 2);
         return;
