@@ -1746,23 +1746,24 @@ struct play_state : game_state {
         auto crouch_end = get_input(action_crouch)->just_inactive;
 
         /* momentary */
-        auto jump       = get_input(action_jump)->just_active;
-        auto reset      = get_input(action_reset)->just_active;
-        auto use        = get_input(action_use)->just_active;
-        auto slot1      = get_input(action_slot1)->just_active;
-        auto slot2      = get_input(action_slot2)->just_active;
-        auto slot3      = get_input(action_slot3)->just_active;
-        auto slot4      = get_input(action_slot4)->just_active;
-        auto slot5      = get_input(action_slot5)->just_active;
-        auto slot6      = get_input(action_slot6)->just_active;
-        auto slot7      = get_input(action_slot7)->just_active;
-        auto slot8      = get_input(action_slot8)->just_active;
-        auto slot9      = get_input(action_slot9)->just_active;
-        auto slot0      = get_input(action_slot0)->just_active;
-        auto gravity    = get_input(action_gravity)->just_active;
-        auto use_tool   = get_input(action_use_tool)->just_active;
-        auto next_tool  = get_input(action_tool_next)->just_active;
-        auto prev_tool  = get_input(action_tool_prev)->just_active;
+        auto jump         = get_input(action_jump)->just_active;
+        auto reset        = get_input(action_reset)->just_active;
+        auto use          = get_input(action_use)->just_active;
+        auto slot1        = get_input(action_slot1)->just_active;
+        auto slot2        = get_input(action_slot2)->just_active;
+        auto slot3        = get_input(action_slot3)->just_active;
+        auto slot4        = get_input(action_slot4)->just_active;
+        auto slot5        = get_input(action_slot5)->just_active;
+        auto slot6        = get_input(action_slot6)->just_active;
+        auto slot7        = get_input(action_slot7)->just_active;
+        auto slot8        = get_input(action_slot8)->just_active;
+        auto slot9        = get_input(action_slot9)->just_active;
+        auto slot0        = get_input(action_slot0)->just_active;
+        auto gravity      = get_input(action_gravity)->just_active;
+        auto use_tool     = get_input(action_use_tool)->just_active;
+        auto alt_use_tool = get_input(action_alt_use_tool)->active;
+        auto next_tool    = get_input(action_tool_next)->just_active;
+        auto prev_tool    = get_input(action_tool_prev)->just_active;
 
         /* persistent */
 
@@ -1784,7 +1785,7 @@ struct play_state : game_state {
         pl.crouch_end = crouch_end;
         pl.use        = use;
         pl.gravity    = gravity;
-        pl.use_tool   = use_tool;
+        pl.use_tool   = use_tool || alt_use_tool;
 
         // blech. Tool gets used below, then fire projectile gets hit here
         if (pl.fire_projectile) {
