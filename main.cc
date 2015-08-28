@@ -1634,6 +1634,7 @@ struct play_state : game_state {
             add_text_with_outline(buf2, -w/2, -200);
         }
 
+        if (0)
         {
             /* Atmo status */
             glm::ivec3 eye_block = get_block_containing(pl.eye);
