@@ -127,7 +127,7 @@ ship_space::mock_ship_space(void)
     /* LET THIS SERVE AS MOTIVATION FOR NEEDING MAP LOAD AND SAVE */
 
     /* first pass build complete outer shell for each chunk */
-    for (unsigned z=0; z < 8; ++z) {
+    for (unsigned z=0; z < 6; ++z) {
         for (unsigned y=0; y < 8; ++y) {
             for (unsigned x=0; x < 8; ++x) {
                 for (int i = 0; i < 4; i++) {
@@ -138,48 +138,62 @@ ship_space::mock_ship_space(void)
                         b->type = block_support;
 
                         /* add surfaces to inside */
-                        b->surfs[surface_zp] = (x >= 2 && x < 6 && y >= 2 && y < 6) ? surface_grate : surface_wall;
-                        sn1(surface_zp, ((x >= 2 && x < 6 && y >= 2 && y < 6) ? surface_grate : surface_wall));
+                        //b->surfs[surface_zp] = (x >= 2 && x < 6 && y >= 2 && y < 6) ? surface_grate : surface_wall;
+                        //sn1(surface_zp, ((x >= 2 && x < 6 && y >= 2 && y < 6) ? surface_grate : surface_wall));
 
-                        /* add surfaces to outside */
-                        b->surfs[surface_zm] = surface_wall;
-                        sn1(surface_zm, surface_wall);
-
-                    } else if( z == 7 ){
-                        /* the roof */
-                        b->type = block_support;
-
-                        /* add surfaces to outside */
                         b->surfs[surface_zp] = surface_wall;
                         sn1(surface_zp, surface_wall);
 
-                        /* add surfaces to inside */
+                        /* add surfaces to outside */
                         b->surfs[surface_zm] = surface_wall;
                         sn1(surface_zm, surface_wall);
 
-                    } else if( y == 0 || y == 7 ){
+                    }
+                    //else if( z == 7 ){
+                    //    /* the roof */
+                    //    b->type = block_support;
+
+                    //    /* add surfaces to outside */
+                    //    b->surfs[surface_zp] = surface_wall;
+                    //    sn1(surface_zp, surface_wall);
+
+                    //    /* add surfaces to inside */
+                    //    b->surfs[surface_zm] = surface_wall;
+                    //    sn1(surface_zm, surface_wall);
+
+                    //}
+                    else if (i == 0 && y == 7 ||
+                             i == 1 && y == 0 ||
+                             i == 2 && y == 7 ||
+                             i == 3 && y == 0)
+                    {
                         /* a wall */
                         b->type = block_support;
 
                         /* add surfaces to one side */
-                        b->surfs[surface_yp] = surface_wall;
-                        sn1(surface_yp, surface_wall);
+                        //b->surfs[surface_yp] = surface_wall;
+                        //sn1(surface_yp, surface_wall);
 
-                        /* add surfaces to other side */
-                        b->surfs[surface_ym] = surface_wall;
-                        sn1(surface_ym, surface_wall);
+                        ///* add surfaces to other side */
+                        //b->surfs[surface_ym] = surface_wall;
+                        //sn1(surface_ym, surface_wall);
 
-                    } else if( x == 0 || x == 7 ){
+                    }
+                    else if (i == 0 && x == 7 ||
+                             i == 1 && x == 7 ||
+                             i == 2 && x == 0 ||
+                             i == 3 && x == 0)
+                    { //( x == 0 && i != 0 || x == 7 && i != 2){
                         /* a wall */
                         b->type = block_support;
 
-                        /* add surfaces to one side */
-                        b->surfs[surface_xp] = surface_wall;
-                        sn1(surface_xp, surface_wall);
+                        ///* add surfaces to one side */
+                        //b->surfs[surface_xp] = surface_wall;
+                        //sn1(surface_xp, surface_wall);
 
-                        /* add surfaces to other side */
-                        b->surfs[surface_xm] = surface_wall;
-                        sn1(surface_xm, surface_wall);
+                        ///* add surfaces to other side */
+                        //b->surfs[surface_xm] = surface_wall;
+                        //sn1(surface_xm, surface_wall);
 
                     } else {
                         b->type = block_empty;
