@@ -1612,7 +1612,8 @@ struct play_state : game_state {
         w = 0; h = 0;
         bind = game_settings.bindings.bindings.find(action_gravity);
         key = lookup_key((*bind).second.binds.inputs[0]);
-        sprintf(buf, "Gravity: %s (%s to toggle)", pl.disable_gravity ? "OFF" : "ON", key);
+        sprintf(buf, "Gravity: %s (%s to toggle)",
+            pl.disable_gravity ? "Off" : "On", key);
         text->measure(buf, &w, &h);
         add_text_with_outline(buf, -w/2, -430);
 
@@ -1620,7 +1621,14 @@ struct play_state : game_state {
         bind = game_settings.bindings.bindings.find(action_use);
         key = lookup_key((*bind).second.binds.inputs[0]);
         if (use_entity) {
-            sprintf(buf2, "%s Use the %s", key, use_entity->type->name);
+            auto e = use_entity->ce;
+            auto switchable = switchable_man.exists(e);
+            auto enabled = switchable && switchable_man.enabled(e);
+            auto powered = power_man.exists(e) ? power_man.powered(e) : false;
+            auto entity_on = switchable ? enabled && powered : powered;
+            sprintf(buf2, "%s Use the %s. %s",
+                key, use_entity->type->name,
+                !switchable ? "" : entity_on ? "Current status: On" : "Current status: Off");
             w = 0; h = 0;
             text->measure(buf2, &w, &h);
             add_text_with_outline(buf2, -w/2, -200);
