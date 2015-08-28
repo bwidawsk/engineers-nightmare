@@ -801,6 +801,8 @@ init()
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);         /* pointers given by other libs may not be aligned */
     glEnable(GL_DEPTH_TEST);
 
+    SDL_GL_SetSwapInterval(-1);
+
     mesher_init();
 
     projectile_sw = load_mesh("mesh/cube.obj");
