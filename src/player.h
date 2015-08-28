@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#define EYE_OFFSET_Z    0.4
+#define EYE_OFFSET_Z    0.6
 
 struct player {
     float angle;
