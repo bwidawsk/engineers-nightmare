@@ -132,6 +132,9 @@
     <ClCompile Include="src\component\relative_position_component.cc">
       <Filter>Source Files\component</Filter>
     </ClCompile>
+    <ClCompile Include="src\network.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\blob.h">
@@ -255,6 +258,9 @@
       <Filter>Header Files\component</Filter>
     </ClInclude>
     <ClInclude Include="src\libconfig_shim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\network.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
