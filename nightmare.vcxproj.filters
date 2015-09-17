@@ -63,9 +63,6 @@
     <ClCompile Include="src\text.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\input.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -123,6 +120,7 @@
     <ClCompile Include="src\component\switchable_component.cc">
       <Filter>Source Files\component</Filter>
     </ClCompile>
+    <ClCompile Include="main.cc" />
     <ClCompile Include="src\component\component_system_manager.cc">
       <Filter>Source Files\component</Filter>
     </ClCompile>
