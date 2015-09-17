@@ -61,8 +61,8 @@ en_settings game_settings;
 struct {
     SDL_Window *ptr;
     SDL_GLContext gl_ctx;
-    int width;
-    int height;
+    unsigned width;
+    unsigned height;
     bool has_focus;
 } wnd;
 
@@ -1688,7 +1688,7 @@ action const* get_input(en_action a) {
     return &game_settings.bindings.bindings[a];
 }
 
-bool save_png_libpng(const char *filename, uint8_t *pixels, int w, int h)
+bool save_png_libpng(const char *filename, uint8_t *pixels, unsigned w, unsigned h)
 {
     auto png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (!png)
