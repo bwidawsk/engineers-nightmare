@@ -6,11 +6,14 @@
 
 #include <algorithm>
 #include <epoxy/gl.h>
+#include <ctime>
 #include <functional>
 #include <glm/glm.hpp>
 #include <stdio.h>
 #include <SDL.h>
 #include <unordered_map>
+
+#include <png.h>
 
 #include "src/common.h"
 #include "src/component/component_system_manager.h"
@@ -1681,6 +1684,86 @@ update()
 
 action const* get_input(en_action a) {
     return &game_settings.bindings.bindings[a];
+}
+
+bool save_png_libpng(const char *filename, uint8_t *pixels, int w, int h)
+{
+    auto png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (!png)
+        return false;
+
+    auto info = png_create_info_struct(png);
+    if (!info) {
+        png_destroy_write_struct(&png, &info);
+        return false;
+    }
+
+    auto *fp = fopen(filename, "wb");
+    if (!fp) {
+        png_destroy_write_struct(&png, &info);
+        return false;
+    }
+
+    png_init_io(png, fp);
+    png_set_IHDR(png, info, w, h, 8 /* depth */, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+        PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+    auto palette = (png_colorp)png_malloc(png, PNG_MAX_PALETTE_LENGTH * sizeof(png_color));
+    if (!palette) {
+        fclose(fp);
+        png_destroy_write_struct(&png, &info);
+        return false;
+    }
+    png_set_PLTE(png, info, palette, PNG_MAX_PALETTE_LENGTH);
+    png_write_info(png, info);
+    png_set_packing(png);
+
+    png_bytepp rows = (png_bytepp)png_malloc(png, h * sizeof(png_bytep));
+    for (auto i = 0u; i < h; ++i)
+        rows[i] = (png_bytep)(pixels + (h - i - 1) * w * 3);
+
+    png_write_image(png, rows);
+    png_write_end(png, info);
+    png_free(png, palette);
+    png_destroy_write_struct(&png, &info);
+
+    fclose(fp);
+    delete[] rows;
+
+    return true;
+}
+
+// is_pano > 0 for pano, == 0 for no pano
+void write_screenshot(const time_t &time, unsigned is_pano) {
+    // make it
+    auto pixels = new GLubyte[3 * wnd.width * wnd.height];
+    auto line = new GLubyte[3 * wnd.width];
+
+    // choose it
+    glReadBuffer(GL_FRONT);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+    // grab it
+    glReadPixels(0, 0, wnd.width, wnd.height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+    // time it
+    char buf[256];
+    char filename[256];
+
+    // date it
+    auto s = std::strftime(buf, 256, "%Y-%m-%d_%H-%M-%S", std::localtime(&time));
+    if (is_pano == 0) {
+        sprintf(filename, "shot/%s_shot.png", buf);
+    }
+    else {
+        sprintf(filename, "shot/%s_%d.png", buf, is_pano);
+    }
+
+    // write it
+    save_png_libpng(filename, pixels, wnd.width, wnd.height);
+
+    // now remove it
+    delete[] pixels;
+    delete[] line;
 }
 
 
