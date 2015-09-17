@@ -51,6 +51,8 @@
 bool exit_requested = false;
 
 bool draw_hud = true;
+bool screenshot_requested = false;
+bool pano_screenshot_requested = false;
 
 auto hfov = DEG2RAD(90.f);
 
@@ -1766,6 +1768,109 @@ void write_screenshot(const time_t &time, unsigned is_pano) {
     delete[] line;
 }
 
+void take_pano_screenshot() {
+    static auto which_shot = -1;
+    static auto old_angle = 0.f;
+    static auto old_elev = 0.f;
+    static auto old_draw_hud = false;
+    static time_t time;
+    static int old_width;
+    static int old_height;
+
+    if (!pano_screenshot_requested)
+        return;
+
+    auto view = which_shot;
+
+    switch (which_shot) {
+        // waiting a frame for window size to propagate
+    case -1:
+    {
+        time = std::time(nullptr);
+        old_angle = pl.angle;
+        old_elev = pl.elev;
+        old_draw_hud = draw_hud;
+        old_width = wnd.width;
+        old_height = wnd.height;
+        draw_hud = false;
+
+        // arbitrary square image size chosen based on my monitor height
+        // pano must be square
+        auto size = 1080;
+        SDL_SetWindowSize(wnd.ptr, size, size);
+        resize(size, size);
+
+        ++which_shot;
+        return;
+    }
+    case 0:
+        pl.angle = 0.25f * 2.f * PI;
+        pl.elev = 0.f;
+
+        ++which_shot;
+        return;
+    case 1:
+        pl.angle = 0.5f * 2.f * PI;
+        pl.elev = 0.f;
+        break;
+    case 2:
+        pl.angle = 0.75f * 2.f * PI;
+        pl.elev = 0.f;
+        break;
+    case 3:
+        pl.angle = 1.f * 2.f * PI;
+        pl.elev = 0.f;
+        break;
+    case 4:
+        pl.angle = 1.f * 2.f * PI;
+        pl.elev = 0.25f * 2.f * PI - 0.000001f;
+        break;
+    case 5:
+        pl.angle = 1.f * 2.f * PI;
+        pl.elev = -0.25f * 2.f * PI + 0.000001f;
+        break;
+    case 6:
+        pano_screenshot_requested = false;
+        draw_hud = old_draw_hud;
+        pl.angle = old_angle;
+        pl.elev = old_elev;
+        which_shot = -2;
+        break;
+    }
+
+    ++which_shot;
+
+    write_screenshot(time, view);
+
+    if (view == 6) {
+        SDL_SetWindowSize(wnd.ptr, old_width, old_height);
+        resize(old_width, old_height);
+    }
+}
+
+void take_screenshot() {
+    static unsigned cycle = 0u;
+    static bool old_draw_hud;
+    static time_t time;
+
+    if (!screenshot_requested)
+        return;
+
+    if (cycle == 0u) {
+        time = std::time(nullptr);
+        old_draw_hud = draw_hud;
+        draw_hud = false;
+        cycle = 1u;
+        return;
+    }
+
+    cycle = 0u;
+
+    draw_hud = old_draw_hud;
+    screenshot_requested = false;
+
+    write_screenshot(time, 0);
+}
 
 struct play_state : game_state {
     play_state() {
@@ -1957,6 +2062,8 @@ struct play_state : game_state {
         auto long_use_tool      = input_use_tool->held;
         auto input_alt_use_tool = get_input(action_alt_use_tool);
         auto alt_use_tool       = input_alt_use_tool->just_pressed;
+        auto take_shot  = get_input(action_take_screenshot)->just_active;
+        auto take_pano  = get_input(action_take_pano_screenshot)->just_active;
 
         /* persistent */
 
@@ -1965,10 +2072,12 @@ struct play_state : game_state {
         pl.angle += game_settings.input.mouse_x_sensitivity * look_x;
         pl.elev += game_settings.input.mouse_y_sensitivity * mouse_invert * look_y;
 
-        if (pl.elev < -MOUSE_Y_LIMIT)
-            pl.elev = -MOUSE_Y_LIMIT;
-        if (pl.elev > MOUSE_Y_LIMIT)
-            pl.elev = MOUSE_Y_LIMIT;
+        if (!pano_screenshot_requested) {
+            if (pl.elev < -MOUSE_Y_LIMIT)
+                pl.elev = -MOUSE_Y_LIMIT;
+            if (pl.elev > MOUSE_Y_LIMIT)
+                pl.elev = MOUSE_Y_LIMIT;
+        }
 
         pl.move = glm::vec2((float) moveX, (float) moveY);
 
@@ -2015,6 +2124,13 @@ struct play_state : game_state {
 
         if (get_input(action_menu)->just_active) {
             set_game_state(create_menu_state());
+        }
+
+        if (take_shot) {
+            screenshot_requested = true;
+        }
+        else if (take_pano) {
+            pano_screenshot_requested = true;
         }
     }
 };
@@ -2231,7 +2347,9 @@ run()
                  */
                 switch (e.window.event) {
                 case SDL_WINDOWEVENT_RESIZED:
-                    resize(e.window.data1, e.window.data2);
+                    if (!pano_screenshot_requested) {
+                        resize(e.window.data1, e.window.data2);
+                    }
                     break;
 
                 case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -2272,6 +2390,14 @@ run()
         update();
 
         SDL_GL_SwapWindow(wnd.ptr);
+
+        if (screenshot_requested) {
+            take_screenshot();
+        } 
+        else if (pano_screenshot_requested) {
+            take_pano_screenshot();
+        }
+
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
 
