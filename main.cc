@@ -38,6 +38,7 @@
 #define APP_NAME        "Engineer's Nightmare"
 #define DEFAULT_WIDTH   1024
 #define DEFAULT_HEIGHT  768
+#define PANO_SHOT_RES   4000
 
 
 #define WORLD_TEXTURE_DIMENSION     32
@@ -143,6 +144,10 @@ extern sw_mesh *no_placement_sw;
 extern hw_mesh *wire_hw_meshes[num_wire_types];
 
 sprite_metrics unlit_ui_slot_sprite, lit_ui_slot_sprite;
+
+GLuint pano_shot_fbo;
+GLuint pano_shot_rb;
+GLuint pano_shot_text;
 
 projectile_linear_manager proj_man;
 
@@ -526,6 +531,28 @@ init()
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);         /* pointers given by other libs may not be aligned */
     glEnable(GL_DEPTH_TEST);
     glPolygonOffset(-0.1f, -0.1f);
+
+    glGenTextures(1, &pano_shot_text);
+    glBindTexture(GL_TEXTURE_2D, pano_shot_text);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap generation included in OpenGL v1.4
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, PANO_SHOT_RES, PANO_SHOT_RES, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenFramebuffers(1, &pano_shot_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, pano_shot_fbo);
+    glGenRenderbuffers(1, &pano_shot_rb);
+    glBindRenderbuffer(GL_RENDERBUFFER, pano_shot_rb);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, PANO_SHOT_RES, PANO_SHOT_RES);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pano_shot_text, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, pano_shot_rb);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     mesher_init();
 
@@ -1613,9 +1640,6 @@ update()
     frame_info.tick();
     auto dt = frame_info.dt;
 
-    float depthClearValue = 1.0f;
-    glClearBufferfv(GL_DEPTH, 0, &depthClearValue);
-
     main_tick_accum.add(dt);
     fast_tick_accum.add(dt);
 
@@ -1684,8 +1708,6 @@ update()
     }
 
     prepare_chunks();
-
-    render();
 }
 
 
@@ -1854,27 +1876,24 @@ void take_pano_screenshot() {
 }
 
 void take_screenshot() {
-    static unsigned cycle = 0u;
-    static bool old_draw_hud;
-    static time_t time;
+    bool old_draw_hud;
+    time_t time;
 
     if (!screenshot_requested)
         return;
 
-    if (cycle == 0u) {
-        time = std::time(nullptr);
-        old_draw_hud = draw_hud;
-        draw_hud = false;
-        cycle = 1u;
-        return;
-    }
-
-    cycle = 0u;
+    time = std::time(nullptr);
+    old_draw_hud = draw_hud;
+    draw_hud = false;
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, pano_shot_fbo);
+    render();
 
     draw_hud = old_draw_hud;
     screenshot_requested = false;
 
     write_screenshot(time, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 struct play_state : game_state {
@@ -2394,6 +2413,8 @@ run()
 
         update();
 
+        render();
+
         SDL_GL_SwapWindow(wnd.ptr);
 
         if (screenshot_requested) {
@@ -2405,6 +2426,9 @@ run()
 
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        float depthClearValue = 1.0f;
+        glClearBufferfv(GL_DEPTH, 0, &depthClearValue);
 
         if (exit_requested) return;
     }
