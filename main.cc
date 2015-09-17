@@ -534,23 +534,23 @@ init()
 
     glGenTextures(1, &pano_shot_text);
     glBindTexture(GL_TEXTURE_2D, pano_shot_text);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap generation included in OpenGL v1.4
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, PANO_SHOT_RES, PANO_SHOT_RES, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glGenFramebuffers(1, &pano_shot_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, pano_shot_fbo);
+
     glGenRenderbuffers(1, &pano_shot_rb);
     glBindRenderbuffer(GL_RENDERBUFFER, pano_shot_rb);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, PANO_SHOT_RES, PANO_SHOT_RES);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, PANO_SHOT_RES, PANO_SHOT_RES);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pano_shot_text, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, pano_shot_rb);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, pano_shot_rb);
+
+    auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -1768,11 +1768,11 @@ void write_screenshot(const time_t &time, unsigned is_pano) {
     auto line = new GLubyte[3 * wnd.width];
 
     // choose it
-    glReadBuffer(GL_FRONT);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
     // grab it
-    glReadPixels(0, 0, wnd.width, wnd.height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    glReadPixels(0, 0, PANO_SHOT_RES, PANO_SHOT_RES, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
     // time it
     char buf[256];
