@@ -1593,15 +1593,6 @@ update()
 
     frame->begin();
 
-    pl.dir = glm::vec3(
-            cosf(pl.angle) * cosf(pl.elev),
-            sinf(pl.angle) * cosf(pl.elev),
-            sinf(pl.elev)
-            );
-
-    pl.eye = pl.pos + glm::vec3(0, 0, EYE_OFFSET_Z);
-    update_camera(pl.dir);
-
     main_tick_accum.add(dt);
     fast_tick_accum.add(dt);
 
@@ -1621,6 +1612,8 @@ update()
         physics_tick(fast_tick_accum.period);
     }
 
+    /* TODO: Camera update is only required if physics changes? */
+    update_camera(pl.dir);
     world_textures->bind(0);
 
     prepare_chunks();

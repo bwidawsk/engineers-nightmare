@@ -157,4 +157,10 @@ physics::tick(float dt)
     this->pl->pos.x = trans.getOrigin().getX();
     this->pl->pos.y = trans.getOrigin().getY();
     this->pl->pos.z = trans.getOrigin().getZ();
+    this->pl->dir = glm::vec3(
+            cosf(this->pl->angle) * cosf(this->pl->elev),
+            sinf(this->pl->angle) * cosf(this->pl->elev),
+            sinf(this->pl->elev)
+            );
+    this->pl->eye = this->pl->pos + glm::vec3(0, 0, EYE_OFFSET_Z);
 }
