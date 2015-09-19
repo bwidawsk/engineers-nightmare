@@ -47,6 +47,10 @@ struct frame_data {
         }
 
         offset = 0;
+
+        float depthClearValue = 1.0f;
+        glClearBufferfv(GL_DEPTH, 0, &depthClearValue);
+
     }
 
     /* Signal that all uses of this frame_data have been submitted to the hardware. */
