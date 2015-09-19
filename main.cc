@@ -1527,6 +1527,7 @@ logic_tick()
     tick_gas_producers(ship);
     tick_power_consumers(ship);
     tick_updateables(ship);
+    calculate_power(ship);
 
     /* HACK: dirty this every frame for now while debugging atmo */
     if (1 || pl.ui_dirty) {
@@ -1606,7 +1607,6 @@ update()
 
     /* this absolutely must run every frame */
     state->update(dt);
-    calculate_power(ship);
 
     /* things that can run at a pretty slow rate */
     while (main_tick_accum.tick()) {
