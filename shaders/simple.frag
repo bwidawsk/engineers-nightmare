@@ -11,7 +11,7 @@ layout(binding=1) uniform sampler3D s_light_field;
 
 layout(location=0) out vec4 color;
 
-const float ambientAmount = 0.1;
+const float ambientAmount = 0.4;
 const float light_step = -0.5;
 const float light_pos_quantize_factor = 4;
 
