@@ -1562,16 +1562,11 @@ physics_tick(float period)
     phy->tick(period);
 }
 
-time_accumulator main_tick_accum(1/15.0f, 1.f);  /* 15Hz tick for game logic */
-time_accumulator fast_tick_accum(1/60.0f, 1.f);  /* 60Hz tick for motion */
-
-/*
- * If update() is being called while behind, we may skip stuff which has no
- * impact
- */
 void
 update()
 {
+    static time_accumulator main_tick_accum(1/15.0f, 1.f);  /* 15Hz tick for game logic */
+    static time_accumulator fast_tick_accum(1/60.0f, 1.f);  /* 60Hz tick for motion */
     frame_info.tick();
     auto dt = frame_info.dt;
 
