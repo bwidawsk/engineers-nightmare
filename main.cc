@@ -1562,6 +1562,24 @@ physics_tick(float period)
     phy->tick(period);
 }
 
+static void
+update_camera(glm::vec3 dir)
+{
+    auto vfov = hfov * (float)wnd.height / wnd.width;
+
+    glm::mat4 proj = glm::perspective(vfov, (float)wnd.width / wnd.height, 0.01f, 1000.0f);
+    glm::mat4 view = glm::lookAt(pl.eye, pl.eye + pl.dir, glm::vec3(0, 0, 1));
+    glm::mat4 centered_view = glm::lookAt(glm::vec3(0), dir, glm::vec3(0, 0, 1));
+
+    auto camera_params = frame->alloc_aligned<per_camera_params>(1);
+
+    camera_params.ptr->view_proj_matrix = proj * view;
+    camera_params.ptr->inv_centered_view_proj_matrix = glm::inverse(proj * centered_view);
+    camera_params.ptr->aspect = (float)wnd.width / wnd.height;
+    camera_params.bind(0, frame);
+
+}
+
 void
 update()
 {
@@ -1581,19 +1599,7 @@ update()
             );
 
     pl.eye = pl.pos + glm::vec3(0, 0, EYE_OFFSET_Z);
-
-    auto vfov = hfov * (float)wnd.height / wnd.width;
-
-    glm::mat4 proj = glm::perspective(vfov, (float)wnd.width / wnd.height, 0.01f, 1000.0f);
-    glm::mat4 view = glm::lookAt(pl.eye, pl.eye + pl.dir, glm::vec3(0, 0, 1));
-    glm::mat4 centered_view = glm::lookAt(glm::vec3(0), pl.dir, glm::vec3(0, 0, 1));
-
-    auto camera_params = frame->alloc_aligned<per_camera_params>(1);
-
-    camera_params.ptr->view_proj_matrix = proj * view;
-    camera_params.ptr->inv_centered_view_proj_matrix = glm::inverse(proj * centered_view);
-    camera_params.ptr->aspect = (float)wnd.width / wnd.height;
-    camera_params.bind(0, frame);
+    update_camera(pl.dir);
 
     main_tick_accum.add(dt);
     fast_tick_accum.add(dt);
