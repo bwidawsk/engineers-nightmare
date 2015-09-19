@@ -104,7 +104,6 @@ gl_debug_callback(GLenum source __unused,
 }
 
 frame_data *frames, *frame;
-unsigned frame_index;
 
 sw_mesh *scaffold_sw;
 sw_mesh *surfs_sw[6];
@@ -663,7 +662,6 @@ init()
     game_settings.merge_with(user_settings);
 
     frames = new frame_data[NUM_INFLIGHT_FRAMES];
-    frame_index = 0;
 
     pl.angle = 0;
     pl.elev = 0;
@@ -1518,15 +1516,12 @@ time_accumulator fast_tick_accum(1/60.0f, 1.f);  /* 60Hz tick for motion */
  * impact
  */
 void
-update(bool behind)
+update()
 {
     frame_info.tick();
     auto dt = frame_info.dt;
 
-    frame = &frames[frame_index++];
-    if (frame_index >= NUM_INFLIGHT_FRAMES) {
-        frame_index = 0;
-    }
+    frame = &frames[frame_info.frame % NUM_INFLIGHT_FRAMES];
 
     frame->begin();
 
