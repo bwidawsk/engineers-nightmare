@@ -1607,7 +1607,7 @@ update()
 
     /* character controller tick: we'd LIKE to run this off the fast_tick_accum, but it has all kinds of
      * every-frame assumptions baked in (player impulse state, etc) */
-    phy->tick_controller(dt);
+    phy->tick_controller();
 
     while (fast_tick_accum.tick()) {
 

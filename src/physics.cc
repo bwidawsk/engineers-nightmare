@@ -93,7 +93,7 @@ physics::~physics()
 }
 
 void
-physics::tick_controller(float dt)
+physics::tick_controller()
 {
     /* messy input -> char controller binding
      * TODO: untangle.
