@@ -1496,6 +1496,10 @@ struct time_accumulator
         accum = std::min(accum + dt, max_period);
     }
 
+    bool would_tick() {
+        return accum >= period;
+    }
+
     bool tick()
     {
         if (accum >= period) {
@@ -1581,11 +1585,12 @@ update_camera(glm::vec3 dir)
 
 }
 
-void
+bool
 update()
 {
     static time_accumulator main_tick_accum(1/15.0f, 1.f);  /* 15Hz tick for game logic */
     static time_accumulator fast_tick_accum(1/60.0f, 1.f);  /* 60Hz tick for motion */
+
     frame_info.tick();
     auto dt = frame_info.dt;
 
@@ -1600,7 +1605,7 @@ update()
     state->update(dt);
 
     /* things that can run at a pretty slow rate */
-    while (main_tick_accum.tick()) {
+    if (main_tick_accum.tick()) {
         logic_tick();
     }
 
@@ -1608,7 +1613,7 @@ update()
      * every-frame assumptions baked in (player impulse state, etc) */
     phy->tick_controller();
 
-    while (fast_tick_accum.tick()) {
+    if (fast_tick_accum.tick()) {
         physics_tick(fast_tick_accum.period);
     }
 
@@ -1671,6 +1676,8 @@ update()
     glUseProgram(simple_shader);
 
     frame->end();
+
+    return fast_tick_accum.would_tick();
 }
 
 
@@ -2181,7 +2188,7 @@ run()
         /* SDL_PollEvent above has already pumped the input, so current key state is available */
         handle_input();
 
-        update();
+        while (update());
 
         SDL_GL_SwapWindow(wnd.ptr);
         glClearColor(0, 0, 0, 0);
