@@ -1586,7 +1586,7 @@ update_camera(glm::vec3 dir)
 }
 
 bool
-update()
+update(bool behind)
 {
     static time_accumulator main_tick_accum(1/15.0f, 1.f);  /* 15Hz tick for game logic */
     static time_accumulator fast_tick_accum(1/60.0f, 1.f);  /* 60Hz tick for motion */
@@ -1594,28 +1594,30 @@ update()
     frame_info.tick();
     auto dt = frame_info.dt;
 
-    frame = &frames[frame_info.frame % NUM_INFLIGHT_FRAMES];
-
-    frame->begin();
-
     main_tick_accum.add(dt);
     fast_tick_accum.add(dt);
-
-    /* this absolutely must run every frame */
-    state->update(dt);
 
     /* things that can run at a pretty slow rate */
     if (main_tick_accum.tick()) {
         logic_tick();
     }
 
-    /* character controller tick: we'd LIKE to run this off the fast_tick_accum, but it has all kinds of
-     * every-frame assumptions baked in (player impulse state, etc) */
-    phy->tick_controller();
-
     if (fast_tick_accum.tick()) {
         physics_tick(fast_tick_accum.period);
     }
+
+    if (behind)
+        return fast_tick_accum.would_tick();
+
+    frame = &frames[frame_info.frame % NUM_INFLIGHT_FRAMES];
+    frame->begin();
+
+    /* this absolutely must run every frame */
+    state->update(dt);
+
+    /* character controller tick: we'd LIKE to run this off the fast_tick_accum, but it has all kinds of
+     * every-frame assumptions baked in (player impulse state, etc) */
+    phy->tick_controller();
 
     /* TODO: Camera update is only required if physics changes? */
     update_camera(pl.dir);
@@ -2185,10 +2187,11 @@ run()
             }
         }
 
-        /* SDL_PollEvent above has already pumped the input, so current key state is available */
-        handle_input();
-
-        while (update());
+	bool behind = false;
+	do {
+		/* SDL_PollEvent above has already pumped the input, so current key state is available */
+		handle_input();
+	} while ((behind = update(behind)));
 
         SDL_GL_SwapWindow(wnd.ptr);
         glClearColor(0, 0, 0, 0);
