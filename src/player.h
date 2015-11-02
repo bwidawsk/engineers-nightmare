@@ -44,5 +44,8 @@ struct player {
     bool disable_gravity;
 
     bool fire_projectile;
+
+    /* FIXME: capslock belongs as part of input state */
+    bool capslock;
 };
 

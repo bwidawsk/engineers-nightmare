@@ -66,6 +66,7 @@ enum en_action : int {
     action_slot9,
     action_slot0,
     action_shift,
+    action_capslock,
 
     num_actions,
 };
@@ -107,6 +108,7 @@ static const action_lookup_t action_lookup_table[] = {
     { "action_slot9",        action_slot9 },
     { "action_slot0",        action_slot0 },
     { "action_shift",        action_shift },
+    { "action_capslock",     action_capslock },
 };
 
 /* fairly ugly. non-keyboard inputs go at bottom

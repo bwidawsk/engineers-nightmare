@@ -1831,7 +1831,8 @@ struct play_state : game_state {
         auto input_alt_use_tool = get_input(action_alt_use_tool);
         auto alt_use_tool       = input_alt_use_tool->just_pressed;
 
-        auto __unused mod_shift          = get_input(action_shift)->active;
+        auto capslock           = pl.capslock ^ get_input(action_capslock)->just_active;
+        auto __unused mod_shift = get_input(action_shift)->active;
 
         /* persistent */
 
@@ -1857,6 +1858,7 @@ struct play_state : game_state {
         pl.use_tool      = use_tool;
         pl.alt_use_tool  = alt_use_tool;
         pl.long_use_tool = long_use_tool;
+        pl.capslock      = capslock;
 
         // blech. Tool gets used below, then fire projectile gets hit here
         if (pl.fire_projectile) {
