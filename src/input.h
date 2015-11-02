@@ -21,19 +21,12 @@ void set_inputs(unsigned char const *,
     const int[],
     std::unordered_map<en_action, action, std::hash<int>> &);
 
-/* The lookup_* functions aren't optimized. They just do a linear walk
-* through the lookup tables. This is probably fine as the tables shouldn't
-* get _too_ large, nor are these likely to be called very frequently.
-*/
-en_action lookup_action(const char *lookup);
+const en_action lookup_action(const char *lookup);
 
-/* This is probably only useful for populating config files */
-const char* lookup_input_action(en_action lookup);
-
-en_input lookup_input(const char *lookup);
-
-/* This is probably only useful for populating config files */
+const en_input lookup_input(const char *lookup);
+/* These are probably only useful for populating config files */
 const char* lookup_input(en_input lookup);
+const char* lookup_input_action(en_action lookup);
 
 /* This is used for getting string representation of input key */
 /* for example input_a => "[ A ]" */

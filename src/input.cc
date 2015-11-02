@@ -32,7 +32,7 @@ get_input_type(en_input input) {
 * through the lookup tables. This is probably fine as the tables shouldn't
 * get _too_ large, nor are these likely to be called very frequently.
 */
-en_action
+const en_action
 lookup_action(const char *lookup) {
     for (const action_lookup_t *input = action_lookup_table; input->name != nullptr; ++input) {
         if (strcmp(input->name, lookup) == 0) {
@@ -42,18 +42,7 @@ lookup_action(const char *lookup) {
     return action_invalid;
 }
 
-/* This is probably only useful for populating config files */
-const char*
-lookup_input_action(en_action lookup) {
-    for (const action_lookup_t *input = action_lookup_table; input->name != nullptr; ++input) {
-        if (input->action == lookup) {
-            return input->name;
-        }
-    }
-    return nullptr;
-}
-
-en_input
+const en_input
 lookup_input(const char *lookup) {
     for (const input_lookup_t *input = input_lookup_table; input->name != nullptr; ++input) {
         if (strcmp(input->name, lookup) == 0) {
@@ -63,10 +52,19 @@ lookup_input(const char *lookup) {
     return input_invalid;
 }
 
-/* This is probably only useful for populating config files */
 const char*
 lookup_input(en_input lookup) {
     for (const input_lookup_t *input = input_lookup_table; input->name != nullptr; ++input) {
+        if (input->action == lookup) {
+            return input->name;
+        }
+    }
+    return nullptr;
+}
+
+const char*
+lookup_input_action(en_action lookup) {
+    for (const action_lookup_t *input = action_lookup_table; input->name != nullptr; ++input) {
         if (input->action == lookup) {
             return input->name;
         }
@@ -88,9 +86,9 @@ lookup_key(en_input lookup) {
 
 void
 set_inputs(unsigned char const * keys,
-const unsigned int mouse_buttons[],
-const int mouse_axes[],
-std::unordered_map<en_action, action, std::hash<int>> &actions) {
+           const unsigned int mouse_buttons[],
+           const int mouse_axes[],
+           std::unordered_map<en_action, action, std::hash<int>> &actions) {
     auto now = SDL_GetTicks();
 
     for (auto &actionPair : actions) {
@@ -100,8 +98,7 @@ std::unordered_map<en_action, action, std::hash<int>> &actions) {
         auto binds = &action->binds;
 
         for (auto &input : binds->inputs) {
-            switch (get_input_type(input))
-            {
+            switch (get_input_type(input)) {
             default:
             case input_type_invalid:
                 break;
