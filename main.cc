@@ -1832,7 +1832,8 @@ struct play_state : game_state {
         auto alt_use_tool       = input_alt_use_tool->just_pressed;
 
         auto capslock           = pl.capslock ^ get_input(action_capslock)->just_active;
-        auto __unused mod_shift = get_input(action_shift)->active;
+        auto mod_shift          = capslock || get_input(action_shift)->active;
+        auto grave              = get_input(action_grave)->just_active;
 
         /* persistent */
 
@@ -1892,6 +1893,12 @@ struct play_state : game_state {
 
         if (get_input(action_menu)->just_active) {
             set_game_state(create_menu_state());
+        }
+
+        if (grave && mod_shift) {
+            /* TODO: debug console */
+            draw_debug_text = !draw_debug_text;
+            pl.ui_dirty = true;
         }
     }
 };
