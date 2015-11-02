@@ -1831,6 +1831,8 @@ struct play_state : game_state {
         auto input_alt_use_tool = get_input(action_alt_use_tool);
         auto alt_use_tool       = input_alt_use_tool->just_pressed;
 
+        auto __unused mod_shift          = get_input(action_shift)->active;
+
         /* persistent */
 
         float mouse_invert = game_settings.input.mouse_invert;
